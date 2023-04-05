@@ -1,0 +1,53 @@
+name: CI/CD Hitema SAMINA THEEPATHILAGAN
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  test:
+  
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Récupération des fichiers du git
+        uses: actions/checkout@v3
+        
+      - name: Installation de node et yarn
+        run: sudo apt-get install nodejs && npm install --global yarn
+        
+      - name: déplacement vers le front et execution des tests
+        run: cd ./client/ && yarn && yarn test
+
+  docker:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération des fichiers du git
+        uses: actions/checkout@v3
+        
+      - name: Connexion au Docker Hub
+        uses: docker/login-action@v2.1.0
+        with:
+          username: saminathee
+          password: ${{secrets.DOCKERHUB_PASSWORD}}
+          
+      - name: Build et Push Client
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: ./client/
+          file: ./client/Dockerfile
+          push: true
+          tags: saminathee/hitemacicd-client:latest
+          
+      - name: Build et Push Api
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: ./api/
+          file: ./api/Dockerfile
+          push: true
+          tags: saminathee/hitemacicd-api:latest
